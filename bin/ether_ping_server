@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'ether_ping'
+
+if ARGV.length < 2
+  print <<END_USAGE
+Usage: #{$0} net_interface ether_type
+  net_interface: name of the Ethernet interface, e.g. eth0
+  ether_type: packet type for the Ethernet II frame, in hex (2 bytes)
+END_USAGE
+  exit 1
+end
+ 
+interface = ARGV[0]
+ether_type = [ARGV[1]].pack('H*').unpack('n').first
+
+ping_server = EtherPing::Server.new interface, ether_type
+ping_server.run
