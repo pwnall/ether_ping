@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
     "VERSION",
     "bin/ether_ping",
     "bin/ether_ping_server",
+    "ether_ping.gemspec",
     "lib/ether_ping.rb",
     "lib/ether_ping/client.rb",
     "lib/ether_ping/server.rb",
