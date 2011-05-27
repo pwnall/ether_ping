@@ -2,21 +2,30 @@
 require 'rubygems'
 require 'ether_ping'
 
-if ARGV.length < 4
+if ARGV.length < 3
   print <<END_USAGE
-Usage: #{$0} net_interface ether_type dest_mac data
+Usage: #{$0} net_interface dest_mac [ether_type] data
   net_interface: name of the Ethernet interface, e.g. eth0
   ether_type: packet type for the Ethernet II frame, in hex (2 bytes)
   dest_mac: destination MAC for the ping packets, in hex (6 bytes)
   data: ping packet data, in hex (0-padded to 64 bytes)
+
+Available Ethernet interfaces:
+#{Ethernet.devices.keys.sort.join("\n")}
 END_USAGE
   exit 1
 end
  
 interface = ARGV[0]
-ether_type = [ARGV[1]].pack('H*').unpack('n').first
-dest_mac = ARGV[2]
-data = [ARGV[3]].pack('H*')
+dest_mac = ARGV[1]
+if ARGV.length == 3
+  ether_type_string = '88B5'
+  data = [ARGV[2]].pack('H*')
+else
+  ether_type_string = ARGV[2]
+  data = [ARGV[3]].pack('H*')
+end
+ether_type = [ether_type_string].pack('H*').unpack('n').first
 
 client = EtherPing::Client.new interface, ether_type, dest_mac
 

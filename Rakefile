@@ -17,9 +17,9 @@ Jeweler::Tasks.new do |gem|
   gem.name = "ether_ping"
   gem.homepage = "http://github.com/pwnall/ether_ping"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
-  gem.email = "costan@gmail.com"
+  gem.summary = %Q{Command-line ping equivalent for Ethernet frames.}
+  gem.description = %Q{Contains an Ethernet-level ping server and client.}
+  gem.email = "victor@costan.us"
   gem.authors = ["Victor Costan"]
   # dependencies defined in Gemfile
 end

@@ -1,6 +1,23 @@
 = ether_ping
 
-Description goes here.
+Command-line tool providing a ping equivalent for Ethernet frames.
+
+== Usage
+
+While ping uses an echo service embedded in every TCP/IP stack, ether_ping
+relies on a server program to have its frames echoed. First start the server on
+the destination computer, and tell it what Ethernet device it should listen to.
+
+    ether_ping_server eth0  # on Linux
+    ether_ping_server en0   # on Mac OS
+    
+Then launch the ping utility. It wants to know the following information:
+* the Ethernet device that will be used for sending ping frames
+* the MAC of the destination's Ethernet device
+* the data to be sent
+
+    ether_ping eth0 c42c0337fffc aabbccdd
+
 
 == Contributing to ether_ping
  
@@ -12,8 +29,11 @@ Description goes here.
 * Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
 * Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
 
+== Author
+
+Victor Costan victor@costan.us
+
 == Copyright
 
-Copyright (c) 2011 Victor Costan. See LICENSE.txt for
-further details.
-
+Copyright (c) 2011 Massachusetts Institute of Technology. 
+See LICENSE.txt for further details.
