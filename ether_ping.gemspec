@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{ether_ping}
-  s.version = "0.1.0"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Victor Costan}]
-  s.date = %q{2011-05-27}
+  s.date = %q{2011-05-29}
   s.description = %q{Contains an Ethernet-level ping server and client.}
   s.email = %q{victor@costan.us}
   s.executables = [%q{ether_ping_server}, %q{ether_ping}]
