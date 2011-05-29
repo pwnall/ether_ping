@@ -6,8 +6,8 @@ if ARGV.length < 3
   print <<END_USAGE
 Usage: #{$0} net_interface dest_mac [ether_type] data
   net_interface: name of the Ethernet interface, e.g. eth0
-  ether_type: packet type for the Ethernet II frame, in hex (2 bytes)
   dest_mac: destination MAC for the ping packets, in hex (6 bytes)
+  ether_type: packet type for the Ethernet II frame, in hex (2 bytes)
   data: ping packet data, in hex (0-padded to 64 bytes)
 
 Available Ethernet interfaces:
@@ -32,7 +32,18 @@ client = EtherPing::Client.new interface, ether_type, dest_mac
 loop do
   print "Pinging #{dest_mac}... "
   STDOUT.flush
-  puts client.ping(data) ? "OK" : "Failed"
+  result = client.ping data
+  if result
+    if result == true
+      puts "OK"
+    else
+      puts "Failed"
+      puts "Expected:\n#{result.first.unpack('H*').first}"
+      puts "Received:\n#{result.last.unpack('H*').last}"
+    end
+  else
+    puts "Timed out"
+  end
   STDOUT.flush
   sleep 1
 end

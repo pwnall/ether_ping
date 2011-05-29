@@ -1,3 +1,5 @@
+require 'timeout'
+
 require 'ethernet'
 
 # :nodoc: namespace
@@ -7,14 +9,14 @@ module EtherPing
 class Server
   module Connection
     def receive_data(packet)
-      source_mac = packet[0, 6].unpack('H*')
-      dest_mac = packet[6, 6].unpack('H*')
+      dest_mac = packet[0, 6].unpack('H*')
+      source_mac = packet[6, 6].unpack('H*')
       ether_type = packet[12, 2].unpack('H*')
       
       puts "Src: #{source_mac} Dst: #{dest_mac} Eth: #{ether_type}\n"
       puts packet[14..-1].unpack('H*')
       
-      # Exchange the source and destination ARP addresses.
+      # Exchange the source and destination MAC addresses.
       packet[0, 6], packet[6, 6] = packet[6, 6], packet[0, 6]
       send_data packet
     end

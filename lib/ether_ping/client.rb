@@ -18,7 +18,8 @@ class Client
   
   # Pings over raw Ethernet sockets.
   #
-  # Returns true if the ping receives a response, false otherwise.
+  # Returns true if the ping response matches, an array of [expected,
+  # received] strings if it doesn't match, and false if the ping times out.
   def ping(data, timeout = 1)
     data = data.clone
     # Pad data to have at least 64 bytes.
@@ -28,9 +29,17 @@ class Client
     @socket.send ping_packet, 0
 
     response_packet = @source_mac + @dest_mac + @ether_type + data
-    response = @socket.recv response_packet.length * 2
     
-    response == response_packet
+    response = nil
+    begin
+      Timeout.timeout timeout do
+        response = @socket.recv response_packet.length * 2
+      end
+    rescue Timeout::Error
+      response = nil
+    end
+    return false unless response
+    response == response_packet || [response, response_packet]
   end
 end  # module EtherPing::Client
 
