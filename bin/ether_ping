@@ -8,8 +8,8 @@ options = {}
 parser = OptionParser.new do |opts|
   opts.banner = "Usage: #{$0} [options] destination_mac"
   
-  opts.on('-e', '--interface ETH', 'Ethernet interface name, e.g. eth0') do |i|
-    options[:interface] = i
+  opts.on('-e', '--interface ETH', 'Ethernet interface name, e.g. eth0') do |e|
+    options[:interface] = e
   end
   
   opts.on('-t', '--type TYPE',
@@ -26,6 +26,14 @@ parser = OptionParser.new do |opts|
     options[:size] = s.to_i
   end
   
+  opts.on('-i', '--interval SECONDS', 'Time between successive pings') do |i|
+    options[:interval] = i.to_f
+  end
+
+  opts.on('-x', '--timeout SECONDS', 'Time before giving up on a ping') do |x|
+    options[:timeout] = x.to_f
+  end
+
   opts.on('-h', '--help', 'Display this screen') do
     puts opts
     exit
@@ -36,6 +44,8 @@ parser.parse!
 options[:interface] ||= Ethernet.devices.keys.sort.first
 options[:ether_type] ||= 0x88B5
 options[:size] ||= 64 unless options[:data]
+options[:interval] ||= 1
+options[:timeout] ||= 1
 
 if ARGV.length < 1
   puts "Missing destination MAC address"
@@ -53,7 +63,7 @@ client = EtherPing::Client.new options[:interface], options[:ether_type],
 loop do
   print "Ping... "
   STDOUT.flush
-  result = client.ping options[:size] || options[:data]
+  result = client.ping options[:size] || options[:data], options[:timeout]
   if result
     if result.kind_of? Numeric
       puts "#{result * 1000000}us"
@@ -66,5 +76,5 @@ loop do
     puts "Timed out"
   end
   STDOUT.flush
-  sleep 1
+  sleep options[:interval]
 end
