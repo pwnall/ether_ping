@@ -1,41 +1,62 @@
 #!/usr/bin/env ruby
+require 'optparse'
+
 require 'rubygems'
 require 'ether_ping'
 
-if ARGV.length < 3
-  print <<END_USAGE
-Usage: #{$0} net_interface dest_mac [ether_type] data
-  net_interface: name of the Ethernet interface, e.g. eth0
-  dest_mac: destination MAC for the ping packets, in hex (6 bytes)
-  ether_type: packet type for the Ethernet II frame, in hex (2 bytes)
-  data: ping packet data, in hex (0-padded to 64 bytes)
+options = {}
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options] destination_mac"
+  
+  opts.on('-e', '--interface ETH', 'Ethernet interface name, e.g. eth0') do |i|
+    options[:interface] = i
+  end
+  
+  opts.on('-t', '--type TYPE',
+          'Ethernet II frame type, as 2 hex bytes, e.g. 0800 for IP') do |p|
+    options[:ether_type] = [p].pack('H*').unpack('n').first
+  end
+  
+  opts.on('-d', '--data HEXBYTES',
+          'Ping packet data, in a sequence of hexadecimal bytes') do |d|
+    options[:data] = [d].pack('H*')
+  end
+  
+  opts.on('-s', '--size SIZE', 'Number of bytes in a ping packet') do |s|
+    options[:size] = s.to_i
+  end
+  
+  opts.on('-h', '--help', 'Display this screen') do
+    puts opts
+    exit
+  end
+end
 
-Available Ethernet interfaces:
-#{Ethernet.devices.keys.sort.join("\n")}
-END_USAGE
+parser.parse!
+options[:interface] ||= Ethernet.devices.keys.sort.first
+options[:ether_type] ||= 0x88B5
+options[:size] ||= 64 unless options[:data]
+
+if ARGV.length < 1
+  puts "Missing destination MAC address"
   exit 1
 end
- 
-interface = ARGV[0]
-dest_mac = ARGV[1]
-if ARGV.length == 3
-  ether_type_string = '88B5'
-  data = [ARGV[2]].pack('H*')
-else
-  ether_type_string = ARGV[2]
-  data = [ARGV[3]].pack('H*')
-end
-ether_type = [ether_type_string].pack('H*').unpack('n').first
+destination_mac = ARGV.first
 
-client = EtherPing::Client.new interface, ether_type, dest_mac
+print "Pinging #{destination_mac} on #{options[:interface]} "
+print "with a #{options[:size] || options[:data].length}-byte frame "
+print "of type #{'%04X' % options[:ether_type]}\n"
+
+client = EtherPing::Client.new options[:interface], options[:ether_type],
+                               destination_mac
 
 loop do
-  print "Pinging #{dest_mac}... "
+  print "Ping... "
   STDOUT.flush
-  result = client.ping data
+  result = client.ping options[:size] || options[:data]
   if result
-    if result == true
-      puts "OK"
+    if result.kind_of? Numeric
+      puts "#{result * 1000000}us"
     else
       puts "Failed"
       puts "Expected:\n#{result.first.unpack('H*').first}"

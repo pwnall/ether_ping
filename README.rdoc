@@ -8,16 +8,14 @@ While ping uses an echo service embedded in every TCP/IP stack, ether_ping
 relies on a server program to have its frames echoed. First start the server on
 the destination computer, and tell it what Ethernet device it should listen to.
 
-    ether_ping_server eth0  # on Linux
-    ether_ping_server en0   # on Mac OS
+    ether_ping_server -e eth0  # on Linux
+    ether_ping_server -e en0   # on Mac OS
     
-Then launch the ping utility. It wants to know the following information:
-* the Ethernet device that will be used for sending ping frames
-* the MAC of the destination's Ethernet device
-* the data to be sent
+Then launch the ping utility.
 
-    ether_ping eth0 c42c0337fffc aabbccdd
+    ether_ping -e eth0 c42c0337fffc
 
+Both commands accept the -h / --help option.
 
 == Contributing to ether_ping
  

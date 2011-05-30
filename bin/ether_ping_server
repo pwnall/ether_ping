@@ -1,22 +1,39 @@
 #!/usr/bin/env ruby
+require 'optparse'
+
 require 'rubygems'
 require 'ether_ping'
 
-if ARGV.length < 1
-  print <<END_USAGE
-Usage: #{$0} net_interface [ether_type]
-  net_interface: name of the Ethernet interface, e.g. eth0
-  ether_type: packet type for the Ethernet II frame, in hex (2 bytes)
-              the default is 88B5, intended for research and experiments
-
-Available Ethernet interfaces:
-#{Ethernet.devices.keys.sort.join("\n")}
-END_USAGE
-  exit 1
+options = { :verbose => true }
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options]"
+  
+  opts.on('-e', '--interface ETH', 'Ethernet interface name, e.g. eth0') do |i|
+    options[:interface] = i
+  end
+  
+  opts.on('-t', '--type TYPE',
+          'Ethernet II frame type, as 2 hex bytes, e.g. 0800 for IP') do |p|
+    options[:ether_type] = [p].pack('H*').unpack('n').first
+  end
+  
+  opts.on('-s', '--silent', 'Do not display packets as they come in') do
+    options[:verbose] = false
+  end
+  
+  opts.on('-h', '--help', 'Display this screen') do
+    puts opts
+    exit
+  end
 end
- 
-interface = ARGV[0]
-ether_type = [ARGV[1] || '88B5'].pack('H*').unpack('n').first
 
-ping_server = EtherPing::Server.new interface, ether_type
+parser.parse!
+options[:interface] ||= Ethernet.devices.keys.sort.first
+options[:ether_type] ||= 0x88B5
+interface_mac = Ethernet::Devices.mac(options[:interface]).unpack('H*').first
+
+print "Waiting for frames of type #{'%04X' % options[:ether_type]} "
+print "on #{options[:interface]} with MAC #{interface_mac}\n"
+ping_server = EtherPing::Server.new options[:interface], options[:ether_type],
+                                    options[:verbose]
 ping_server.run

@@ -7,43 +7,28 @@ module EtherPing
 
 # Responder for ping utility using raw Ethernet sockets.
 class Server
-  module Connection
-    def receive_data(packet)
-      dest_mac = packet[0, 6].unpack('H*')
-      source_mac = packet[6, 6].unpack('H*')
-      ether_type = packet[12, 2].unpack('H*')
-      
-      puts "Src: #{source_mac} Dst: #{dest_mac} Eth: #{ether_type}\n"
-      puts packet[14..-1].unpack('H*')
-      
-      # Exchange the source and destination MAC addresses.
-      packet[0, 6], packet[6, 6] = packet[6, 6], packet[0, 6]
-      send_data packet
-    end
-  end
-
-  class ConnectionWrapper
-    include Connection
-    
-    def initialize(socket)
-      @socket = socket
-    end
-    
-    def send_data(data)
-      @socket.send data, 0
-    end
-  end
-  
   def run
-    connection = ConnectionWrapper.new @socket
     loop do
       packet = @socket.recv 65536
-      connection.receive_data packet
+      # Respond afap: exchange the source and destination MAC addresses.
+      packet[0, 6], packet[6, 6] = packet[6, 6], packet[0, 6]
+      @socket.send packet, 0
+  
+      if @verbose
+        # The MAC addresses were switched above, before responding.
+        dest_mac = packet[6, 6].unpack('H*').first
+        source_mac = packet[0, 6].unpack('H*').first
+        ether_type = packet[12, 2].unpack('H*').first
+          
+        puts "Src: #{source_mac} Dst: #{dest_mac} Eth: #{ether_type} Data:\n"
+        puts packet[14..-1].unpack('H*').first
+      end
     end
   end
   
-  def initialize(eth_device, ether_type)
+  def initialize(eth_device, ether_type, verbose = true)
     @socket = Ethernet.raw_socket eth_device, ether_type
+    @verbose = verbose
   end
 end  # module EtherPing::Server
   

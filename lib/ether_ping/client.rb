@@ -18,28 +18,36 @@ class Client
   
   # Pings over raw Ethernet sockets.
   #
-  # Returns true if the ping response matches, an array of [expected,
-  # received] strings if it doesn't match, and false if the ping times out.
+  # Returns a Number representing the ping latency (in seconds) if the ping
+  # response matches, an array of [expected, received] strings if it doesn't
+  # match, and false if the ping times out.
   def ping(data, timeout = 1)
-    data = data.clone
+    if data.kind_of? Numeric
+      data = "\0" * data
+    end
     # Pad data to have at least 64 bytes.
     data += "\0" * (64 - data.length) if data.length < 64
  
-    ping_packet = @dest_mac + @source_mac + @ether_type + data
-    @socket.send ping_packet, 0
+    ping_packet = [@dest_mac, @source_mac, @ether_type, data].join
 
-    response_packet = @source_mac + @dest_mac + @ether_type + data
-    
     response = nil
+    receive_ts = nil
+    send_ts = nil
     begin
       Timeout.timeout timeout do
-        response = @socket.recv response_packet.length * 2
+        send_ts = Time.now
+        @socket.send ping_packet, 0
+        response = @socket.recv ping_packet.length * 2
+        receive_ts = Time.now
       end
     rescue Timeout::Error
       response = nil
     end
     return false unless response
-    response == response_packet || [response, response_packet]
+
+    response_packet = [@source_mac, @dest_mac, @ether_type, data].join
+    response == response_packet ? receive_ts - send_ts :
+                                  [response, response_packet]
   end
 end  # module EtherPing::Client
 
